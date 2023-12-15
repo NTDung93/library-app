@@ -52,3 +52,7 @@ background-color: #0e76a8 ;
     pointer-events: none;
     cursor: default;
  }
+
+ a.btn.btn-md.main-color.text-white:hover{
+    background-color: #0e76a8;
+}
