@@ -5,8 +5,11 @@ import { StarsReview } from "../Utils/StarsReview";
 import { CheckoutAndReviewBox } from "./components/CheckoutAndReviewBox";
 import ReviewModel from "../../models/ReviewModel";
 import { LatestReviews } from "./components/LastestReviews";
+import { useOktaAuth } from "@okta/okta-react";
 
 export const BookCheckoutPage = () => {
+
+    const { authState } = useOktaAuth();
 
     const [book, setBook] = useState<BookModel>()
     const [isLoading, setIsLoading] = useState(true)
@@ -16,6 +19,10 @@ export const BookCheckoutPage = () => {
     const [reviews, setReviews] = useState<ReviewModel[]>()
     const [totalStars, setTotalStars] = useState<number>(0)
     const [isLoadingReview, setIsLoadingReview] = useState(true)
+
+    //Loan count state
+    const [currentLoanCount, setCurrentLoanCount] = useState<number>(0)
+    const [isLoadingCurrentLoanCount, setIsLoadingCurrentLoanCount] = useState(true)
 
     const bookId = window.location.pathname.split('/')[2]
 
@@ -95,7 +102,33 @@ export const BookCheckoutPage = () => {
         });
     }, []);
 
-    if (isLoading || isLoadingReview) {
+    useEffect(() => {
+        const fetchUserCurrentLoanCount = async () => {
+            if (authState && authState?.isAuthenticated) {
+                const baseUrl: string = `http://localhost:8080/api/books/secure/currentloans/count`;
+                const requestOptions = {
+                    method: 'GET',
+                    headers: {
+                        Authorization: `Bearer ${authState.accessToken?.accessToken}`,
+                        'Content-Type': 'application/json'
+                    }
+                }
+                const currentLoanCountResponse = await fetch(baseUrl, requestOptions);
+                if (!currentLoanCountResponse.ok) {
+                    throw new Error('Something went wrong!');
+                }
+                const currentLoanCountResponseJson = await currentLoanCountResponse.json();
+                setCurrentLoanCount(currentLoanCountResponseJson);
+            }
+            setIsLoadingCurrentLoanCount(false);
+        }
+        fetchUserCurrentLoanCount().catch((err) => {
+            setIsLoadingCurrentLoanCount(false);
+            setHttpError(err.message);
+        });
+    }, [authState]);
+
+    if (isLoading || isLoadingReview || isLoadingCurrentLoanCount) {
         return (
             <SpinnerLoading />
         )
@@ -129,7 +162,7 @@ export const BookCheckoutPage = () => {
                             <StarsReview rating={totalStars} size={32} />
                         </div>
                     </div>
-                    <CheckoutAndReviewBox book={book} mobile={false} />
+                    <CheckoutAndReviewBox book={book} mobile={false} currentLoansCount={currentLoanCount} />
                 </div>
                 <hr />
                 <LatestReviews reviews={reviews!} bookId={book?.id} mobile={false} />
@@ -151,7 +184,7 @@ export const BookCheckoutPage = () => {
                         <StarsReview rating={totalStars} size={32} />
                     </div>
                 </div>
-                <CheckoutAndReviewBox book={book} mobile={true} />
+                <CheckoutAndReviewBox book={book} mobile={true} currentLoansCount={currentLoanCount}/>
                 <hr />
                 <LatestReviews reviews={reviews!} bookId={book?.id} mobile={true} />
             </div>
