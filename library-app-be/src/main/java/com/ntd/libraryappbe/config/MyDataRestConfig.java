@@ -1,6 +1,8 @@
 package com.ntd.libraryappbe.config;
 
 import com.ntd.libraryappbe.entity.Book;
+import com.ntd.libraryappbe.entity.History;
+import com.ntd.libraryappbe.entity.Message;
 import com.ntd.libraryappbe.entity.Review;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.rest.core.config.RepositoryRestConfiguration;
@@ -17,9 +19,13 @@ public class MyDataRestConfig implements RepositoryRestConfigurer {
 
         config.exposeIdsFor(Book.class);
         config.exposeIdsFor(Review.class);
+        config.exposeIdsFor(History.class);
+        config.exposeIdsFor(Message.class);
 
         disableHttpMethods(Book.class, config, theUnsupportedActions);
         disableHttpMethods(Review.class, config, theUnsupportedActions);
+        disableHttpMethods(History.class, config, theUnsupportedActions);
+        disableHttpMethods(Message.class, config, theUnsupportedActions);
 
         /* Configure CORS Mapping */
         cors.addMapping(config.getBasePath() + "/**").allowedOrigins(allowedOrigins);
