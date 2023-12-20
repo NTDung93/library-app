@@ -17,6 +17,26 @@ public class AdminController {
         this.adminService = adminService;
     }
 
+    @PutMapping("/secure/increase/book/quantity")
+    public void increaseBookQuantity(@RequestHeader("Authorization") String token,
+                                     @RequestParam("bookId") Long bookId) throws Exception {
+        String admin = ExtractJWT.payloadJWTExtraction(token, "\"userType\"");
+        if (admin == null || !admin.equals("admin")) {
+            throw new Exception("Administration page only!");
+        }
+        adminService.increaseBookQuantity(bookId);
+    }
+
+    @PutMapping("/secure/decrease/book/quantity")
+    public void decreaseBookQuantity(@RequestHeader("Authorization") String token,
+                                     @RequestParam("bookId") Long bookId) throws Exception {
+        String admin = ExtractJWT.payloadJWTExtraction(token, "\"userType\"");
+        if (admin == null || !admin.equals("admin")) {
+            throw new Exception("Administration page only!");
+        }
+        adminService.decreaseBookQuantity(bookId);
+    }
+
     @PostMapping("/secure/add/book")
     public void postBook(@RequestHeader("Authorization") String token,
                          @RequestBody AddBookRequest addBookRequest) throws Exception {
