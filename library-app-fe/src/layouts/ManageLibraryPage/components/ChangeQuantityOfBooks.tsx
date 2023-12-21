@@ -15,6 +15,7 @@ export const ChangeQuantityOfBooks = () => {
     const [totalAmountOfBooks, setTotalAmountOfBooks] = useState(0);
     const [totalPages, setTotalPages] = useState(0);
 
+    //just to trigger the useEffect hook whenever a book is deleted
     const [bookDelete, setBookDelete] = useState(false);
 
     useEffect(() => {
@@ -49,6 +50,8 @@ export const ChangeQuantityOfBooks = () => {
                 });
             }
 
+            console.log(bookDelete);
+
             setBooks(loadedBooks);
             setIsLoading(false);
         };
@@ -65,7 +68,11 @@ export const ChangeQuantityOfBooks = () => {
 
     const paginate = (pageNumber: number) => setCurrentPage(pageNumber);
 
-    const deleteBook = () => setBookDelete(!bookDelete);
+    const deleteBook = () => {
+        //just to trigger the useEffect hook whenever a book is deleted
+        setBookDelete(!bookDelete);
+        console.log(bookDelete);
+    }
 
     if (isLoading) {
         return (

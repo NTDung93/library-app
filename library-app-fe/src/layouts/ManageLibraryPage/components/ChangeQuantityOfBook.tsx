@@ -30,6 +30,7 @@ export const ChangeQuantityOfBook: React.FC<{ book: BookModel, deleteBook: any }
         if (!quantityUpdateResponse.ok) {
             throw new Error('Something went wrong!');
         }
+        //cuz we not using the useEffect hook, we need to update the state manually
         setQuantity(quantity + 1);
         setRemaining(remaining + 1);
     }

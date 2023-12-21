@@ -1,6 +1,8 @@
 package com.ntd.libraryappbe.service;
 
 import com.ntd.libraryappbe.dao.BookRepository;
+import com.ntd.libraryappbe.dao.CheckoutRepository;
+import com.ntd.libraryappbe.dao.ReviewRepository;
 import com.ntd.libraryappbe.entity.Book;
 import com.ntd.libraryappbe.requestmodels.AddBookRequest;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,15 +15,19 @@ import java.util.Optional;
 @Transactional
 public class AdminService {
     private BookRepository bookRepository;
+    private ReviewRepository reviewRepository;
+    private CheckoutRepository checkoutRepository;
 
     @Autowired
-    public AdminService(BookRepository bookRepository) {
+    public AdminService(BookRepository bookRepository, ReviewRepository reviewRepository, CheckoutRepository checkoutRepository) {
         this.bookRepository = bookRepository;
+        this.reviewRepository = reviewRepository;
+        this.checkoutRepository = checkoutRepository;
     }
 
     public void increaseBookQuantity(Long bookId) throws Exception {
         Optional<Book> book = bookRepository.findById(bookId);
-        if (!book.isPresent()){
+        if (!book.isPresent()) {
             throw new Exception("Book not found");
         }
         book.get().setCopies(book.get().getCopies() + 1);
@@ -31,7 +37,7 @@ public class AdminService {
 
     public void decreaseBookQuantity(Long bookId) throws Exception {
         Optional<Book> book = bookRepository.findById(bookId);
-        if (!book.isPresent() || book.get().getCopies() <= 0 || book.get().getCopiesAvailable() <= 0){
+        if (!book.isPresent() || book.get().getCopies() <= 0 || book.get().getCopiesAvailable() <= 0) {
             throw new Exception("Book not found or quantity locked");
         }
         book.get().setCopies(book.get().getCopies() - 1);
@@ -51,5 +57,15 @@ public class AdminService {
         book.setImg(addBookRequest.getImg());
 
         bookRepository.save(book);
+    }
+
+    public void deleteBook(Long bookId) throws Exception {
+        Optional<Book> book = bookRepository.findById(bookId);
+        if (!book.isPresent()) {
+            throw new Exception("Book not found");
+        }
+        bookRepository.delete(book.get());
+        checkoutRepository.deleteAllByBookId(bookId);
+        reviewRepository.deleteAllByBookId(bookId);
     }
 }

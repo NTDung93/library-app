@@ -6,7 +6,7 @@ import com.ntd.libraryappbe.utils.ExtractJWT;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
-@CrossOrigin(origins = "http://localhost:3000")
+@CrossOrigin(origins = "https://localhost:3000")
 @RestController
 @RequestMapping("/api/admin")
 public class AdminController {
@@ -47,4 +47,13 @@ public class AdminController {
         adminService.postBook(addBookRequest);
     }
 
+    @DeleteMapping("/secure/delete/book")
+    public void deleteBook(@RequestHeader("Authorization") String token,
+                           @RequestParam("bookId") Long bookId) throws Exception {
+        String admin = ExtractJWT.payloadJWTExtraction(token, "\"userType\"");
+        if (admin == null || !admin.equals("admin")) {
+            throw new Exception("Administration page only!");
+        }
+        adminService.deleteBook(bookId);
+    }
 }
