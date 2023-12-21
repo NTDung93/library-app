@@ -20,7 +20,7 @@ export const ReviewListPage: React.FC<{}> = (props) => {
 
     useEffect(() => {
         const fetchReviews = async () => {
-            const baseUrl: string = `http://localhost:8080/api/reviews/search/findByBookId?bookId=${bookId}&page=${currentPage - 1}&size=${reviewsPerPage}`;
+            const baseUrl: string = `${process.env.REACT_APP_API}/reviews/search/findByBookId?bookId=${bookId}&page=${currentPage - 1}&size=${reviewsPerPage}`;
 
             const response = await fetch(baseUrl);
 
