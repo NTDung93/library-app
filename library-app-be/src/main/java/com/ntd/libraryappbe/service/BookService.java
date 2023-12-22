@@ -3,10 +3,13 @@ package com.ntd.libraryappbe.service;
 import com.ntd.libraryappbe.dao.BookRepository;
 import com.ntd.libraryappbe.dao.CheckoutRepository;
 import com.ntd.libraryappbe.dao.HistoryRepository;
+import com.ntd.libraryappbe.dao.PaymentRepository;
 import com.ntd.libraryappbe.entity.Book;
 import com.ntd.libraryappbe.entity.Checkout;
 import com.ntd.libraryappbe.entity.History;
+import com.ntd.libraryappbe.entity.Payment;
 import com.ntd.libraryappbe.responsemodels.ShelfCurrentLoansResponse;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,11 +27,15 @@ public class BookService {
     private BookRepository bookRepository;
     private CheckoutRepository checkoutRepository;
     private HistoryRepository historyRepository;
+    private PaymentRepository paymentRepository;
 
-    public BookService(BookRepository bookRepository, CheckoutRepository checkoutRepository, HistoryRepository historyRepository) {
+    @Autowired
+    public BookService(BookRepository bookRepository, CheckoutRepository checkoutRepository,
+                       HistoryRepository historyRepository, PaymentRepository paymentRepository) {
         this.bookRepository = bookRepository;
         this.checkoutRepository = checkoutRepository;
         this.historyRepository = historyRepository;
+        this.paymentRepository = paymentRepository;
     }
 
     public Book checkoutBook(String userEmail, Long bookId) throws Exception {
@@ -38,6 +45,35 @@ public class BookService {
 
         if (!book.isPresent() || validateCheckout != null || book.get().getCopiesAvailable() <= 0) {
             throw new Exception("Book does not exist or already checked out");
+        }
+
+        List<Checkout> currentBooksCheckedOut = checkoutRepository.findBooksCheckedOutByUserEmail(userEmail);
+
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+
+        boolean bookNeedsReturned = false;
+
+        for (Checkout checkout : currentBooksCheckedOut) {
+            Date d1 = sdf.parse(checkout.getReturnDate());
+            Date d2 = sdf.parse(LocalDate.now().toString());
+
+            if (d1.compareTo(d2) < 0) {
+                bookNeedsReturned = true;
+                break;
+            }
+        }
+
+        Payment userPayment = paymentRepository.findByUserEmail(userEmail);
+
+        if ((userPayment != null && userPayment.getAmount() > 0) || (userPayment != null && bookNeedsReturned)) {
+            throw new Exception("Outstanding userPayment or book needs returned");
+        }
+
+        if (userPayment == null) {
+            Payment newPayment = new Payment();
+            newPayment.setUserEmail(userEmail);
+            newPayment.setAmount(0);
+            paymentRepository.save(newPayment);
         }
 
         book.get().setCopiesAvailable(book.get().getCopiesAvailable() - 1);
@@ -110,11 +146,26 @@ public class BookService {
         Checkout validateCheckout = checkoutRepository.findByUserEmailAndAndBookId(userEmail, bookId);
 
         if (!book.isPresent() || validateCheckout == null) {
-            throw new Exception("Book does not exist or already checked out");
+            throw new Exception("Book does not exist or not checked out by user");
         }
 
         book.get().setCopiesAvailable(book.get().getCopiesAvailable() + 1);
         bookRepository.save(book.get());
+
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+
+        Date d1 = sdf.parse(validateCheckout.getReturnDate());
+        Date d2 = sdf.parse(LocalDate.now().toString());
+
+        TimeUnit time = TimeUnit.DAYS;
+
+        double diff = time.convert(d1.getTime() - d2.getTime(), TimeUnit.MILLISECONDS);
+
+        if (diff < 0){
+            Payment userPayment = paymentRepository.findByUserEmail(userEmail);
+            userPayment.setAmount(userPayment.getAmount() + Math.abs(diff));
+            paymentRepository.save(userPayment);
+        }
 
         checkoutRepository.delete(validateCheckout);
 

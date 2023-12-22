@@ -32,6 +32,9 @@ export const BookCheckoutPage = () => {
     const [isCheckedOut, setIsCheckedOut] = useState<boolean>(false)
     const [isLoadingBookCheckedOut, setIsLoadingBookCheckedOut] = useState(true)
 
+    //payment
+    const [displayError, setDisplayError] = useState<boolean>(false)
+
     const bookId = window.location.pathname.split('/')[2]
 
     useEffect(() => {
@@ -213,8 +216,11 @@ export const BookCheckoutPage = () => {
         }
         const checkoutResponse = await fetch(baseUrl, requestOptions);
         if (!checkoutResponse.ok) {
-            throw new Error('Something went wrong!');
+            setDisplayError(true);
+            // throw new Error('Something went wrong!');
+            // setHttpError('Something went wrong!');
         }
+        setDisplayError(false);
         setIsCheckedOut(true);
     }
 
@@ -244,6 +250,12 @@ export const BookCheckoutPage = () => {
     return (
         <div>
             <div className='container d-none d-lg-block'>
+                {
+                    displayError &&
+                    <div className="alert alert-danger mt-3" role="alert">
+                        Please pay outstanding fees and/or return late book(s)
+                    </div>
+                }
                 <div className='row mt-5'>
                     <div className='col-sm-2 col-md-2'>
                         {book?.img ?
@@ -269,6 +281,12 @@ export const BookCheckoutPage = () => {
                 <LatestReviews reviews={reviews!} bookId={book?.id} mobile={false} />
             </div>
             <div className='container d-lg-none mt-5'>
+                {
+                    displayError &&
+                    <div className="alert alert-danger mt-3" role="alert">
+                        Please pay outstanding fees and/or return late book(s)
+                    </div>
+                }
                 <div className='d-flex justify-content-center alighn-items-center'>
                     {book?.img ?
                         <img src={book?.img} width='226' height='349' alt='Book' />
@@ -287,7 +305,7 @@ export const BookCheckoutPage = () => {
                 </div>
                 <CheckoutAndReviewBox book={book} mobile={true} currentLoansCount={currentLoanCount}
                     isAuthenticated={authState?.isAuthenticated} isCheckedOut={isCheckedOut} checkoutBook={checkoutBook}
-                    isReviewLeft={isReviewLeft} submitReview={submitReview}/>
+                    isReviewLeft={isReviewLeft} submitReview={submitReview} />
                 <hr />
                 <LatestReviews reviews={reviews!} bookId={book?.id} mobile={true} />
             </div>
