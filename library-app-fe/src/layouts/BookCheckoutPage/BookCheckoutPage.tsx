@@ -217,8 +217,8 @@ export const BookCheckoutPage = () => {
         const checkoutResponse = await fetch(baseUrl, requestOptions);
         if (!checkoutResponse.ok) {
             setDisplayError(true);
+            return;
             // throw new Error('Something went wrong!');
-            // setHttpError('Something went wrong!');
         }
         setDisplayError(false);
         setIsCheckedOut(true);
